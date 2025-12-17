@@ -1,0 +1,42 @@
+name: Accessibility Gates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # Nightly run at 3 AM UTC
+
+jobs:
+  lighthouse-a11y:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Lighthouse
+        run: npm install -g lighthouse
+
+      - name: Run Lighthouse Accessibility Audit
+        run: |
+          lighthouse https://www.saucedemo.com \
+            --only-categories=accessibility \
+            --output=json \
+            --output-path=./lighthouse-a11y.json \
+            --chrome-flags="--headless"
+
+      - name: Enforce Accessibility Score Gate
+        run: |
+          SCORE=$(node -e "console.log(require('./lighthouse-a11y.json').categories.accessibility.score * 100)")
+          echo "Accessibility Score: $SCORE"
+
+          if [ "$SCORE" -lt 85 ]; then
+            echo "Accessibility gate failed"
+            exit 1
+          fi
+
+          echo "Accessibility gate passed"
