@@ -3,7 +3,7 @@ name: Performance Gates
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *' # nightly run at 2 AM UTC
+    - cron: '0 2 * * *'
 
 jobs:
   k6-performance-tests:
@@ -13,16 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install k6
-        run: |
-          sudo gpg -k
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver keyserver.ubuntu.com --recv-keys C780D0BDBA26DEB4
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install k6
-
       - name: Run smoke performance test
-        run: k6 run k6/smoke.js
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/smoke.js
 
       - name: Run baseline performance test
-        run: k6 run k6/baseline.js
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: k6/baseline.js
